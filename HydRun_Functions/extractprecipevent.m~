@@ -1,0 +1,65 @@
+function [precipEvents, nEvent, pNA] = extractprecipevent(precip, MAG, Thr)
+%Extract Precipitation Event 
+%   [PrecipEvent, nEvent, pNA] = extractprecipevent(precip, MAG, Thr) returns
+%   extracted precipitation events in a cell array (PrecipEvent) and the
+%   number of extracted events (nEvent). Also pNA indicates the portion of
+%   NAs in a rainfall event.
+%
+%   Input Variables:
+%   precip: time series of precipitation data
+%   MAG (in HOUR): the max allowable gap for an intermittent rainfall
+%   Thr (optional): minimum amount of preciption (by default, Thr = 0)
+%
+%   Note: the NAs in precipitation data are replaced with zero before
+%   processing.
+
+    if nargin < 3, Thr = 0; end
+
+    % Convert the unit of MAG from hour to the number of time steps
+    MAG = round((MAG/2) / (mode(diff(precip(:, 1)))*24)); 
+%     if MAG < 1, MAG = 0; end 
+
+    % Replace NAs with zero
+    oprecip = precip;
+    precip(isnan(precip(:, 2)), 2) = 0; 
+
+    matrix = zeros(size(precip, 1), 2*MAG+1); 
+    matrix(:, MAG+1) = precip(:, 2);
+
+    for i = 1:MAG
+        matrix(1:end-i, MAG+1-i) = precip(1+i:end, 2); 
+        matrix(1+i:end, MAG+1+i) = precip(1:end-i, 2);
+    end
+
+    tmp = sum(matrix, 2); 
+    idx1 = tmp ~= 0; 
+
+    tmp = diff(idx1); 
+    tmp = [0; tmp; 0];
+
+    % Complete the possibly uncompleted event at beiginning and end
+    tmp2 = tmp(tmp ~= 0); 
+    if tmp2(1) == -1, tmp(1) = 1; end
+    if tmp2(end) == 1, tmp(end) = -1; end 
+
+    st = find(tmp == 1); 
+    ed = find(tmp == -1); 
+    lens = ed-st; 
+
+    precip2 = precip(idx1, :);
+    precipEvents = mat2cell(precip2, lens); 
+    precipEvents = cellfun(@(x)x(MAG:end-MAG, :), precipEvents, 'uniform', 0);
+
+    oprecip2 = oprecip(idx1, :);
+    oprecipEvents = mat2cell(oprecip2, lens); 
+    pNA = cellfun(@(x)sum(isnan(x(:, 2)))/length(x(:, 2)), oprecipEvents, 'uniform', 0); 
+    pNA = cell2mat(pNA);
+
+    idx2 = cellfun(@(x)sum(x(:, 2))>Thr, precipEvents); 
+    precipEvents = precipEvents(idx2); 
+    pNA = pNA(idx2);
+
+    nEvent = length(precipEvents);
+
+end
+
