@@ -1,11 +1,11 @@
 % add function folder to MATLAB search path
 addpath('HydRun_functions'); 
 % loading the matlab data: time series of streamflow and precip (rainfall)
-load('usgs_data.mat'); 
+load('BB_data.mat'); 
 
-filter = 0.955; % filter coefficient for baseflow separation
-PKThreshold = 1; % peak threshold for runoff events
-ReRa = 0.3; % return ratio
+filter = 0.995; % filter coefficient for baseflow separation
+PKThreshold = 0.03; % peak threshold for runoff events
+ReRa = 0.1; % return ratio
 
 % baseflow separation using digital filter method
 [stormflow, baseflow] = separatebaseflow(streamflow, filter, 4); 
@@ -14,6 +14,7 @@ ReRa = 0.3; % return ratio
 [runoffEvents, nRunoffEvent] = extractrunoff(stormflow, PKThreshold, ReRa, 0.001, 0.0001, 4); 
 
 % plot the extracted runoff events on the hydrograph
+figure();
 plotrunoffevent(runoffEvents, streamflow); 
 
 % extract the rainfall events from the time series of precipitation
@@ -37,4 +38,5 @@ RR = batchprocessing(@computeRR, [1, 2], RR_Events(:, 1), RR_Events(:, 2), da);
 % compute the MRC curve
 [gRC, rsq, f, MRC, rlimb_norm] = generalizerecession(rlimbs); 
 % plot the MRC curve with normlized recession limbs of runoff events
+figure();
 plotMRC(MRC, rlimb_norm); 
