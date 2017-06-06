@@ -21,7 +21,7 @@ plotrunoffevent(runoffEvents, streamflow);
 [rainEvents, nRainEvent, Rain_pNA] = extractprecipevent(precip, 6); 
 
 % match runoff events with rainfall events
-n = 25; % define search window left edge; here, it is 5 hours before the start of runoff event
+n = 5; % define search window left edge; here, it is 5 hours before the start of runoff event
 [RR_Events, relaTab] = matchrainfallrunoff(rainEvents, runoffEvents, n); 
 
 % compute the time characteristics for the rainfall-runoff events
