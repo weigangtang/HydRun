@@ -63,7 +63,11 @@ guidata(hObject, handles);
 
 cpath = which('HydRun.m'); % current path
 if ~isempty(cpath)
-    cidx = strfind(cpath, '/'); 
+    if ispc
+        cidx = strfind(cpath, '\');
+    else
+        cidx = strfind(cpath, '/'); 
+    end 
     foldername = cpath(1:cidx(end));
     fun_folder = [foldername, 'HydRun_Functions'];
     if exist(fun_folder, 'dir') == 7, addpath(fun_folder); end
